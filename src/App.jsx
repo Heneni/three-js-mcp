@@ -1,229 +1,112 @@
-// src/App.jsx  — replace the entire file with this
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useScroll, useTransform } from "framer-motion";
+import Lenis from "lenis";
 
-gsap.registerPlugin(ScrollTrigger);
-
-function Header() {
-  return (
-    <header className="header">
-      <h1 className="header-title">ANNA MILLS</h1>
-      <nav className="header-nav">
-        <a href="#about">ABOUT</a>
-        <a href="#work">WORK</a>
-        <a href="#contact">CONTACT</a>
-      </nav>
-    </header>
-  );
-}
-
-function LeftRail() {
-  return (
-    <aside className="rail">
-      <p>Welcome to my website! Do stick around. Scrolling is encouraged here, it makes things happen.</p>
-      <div style={{ marginTop: 8, textTransform: "uppercase", fontWeight: 700 }}>PLAY!</div>
-    </aside>
-  );
-}
-
-function Collage({ images }) {
-  // Four-card collage tuned to match the reference site’s proportions and overlap.
-  // Each card has explicit vw-based dimensions, rotation, and z for “stack 1/2/3/4”.
-  const cards = useMemo(
-    () => [
-      // stack 1
-      { top: "0vw",   left: "28vw", width: "28vw", height: "28vw", rotate: 0,  z: 2, r: 24 },
-      // stack 2
-      { top: "3vw",   left: "64vw", width: "20vw", height: "20vw", rotate: 0,  z: 3, r: 20 },
-      // stack 3
-      { top: "34vw",  left: "43vw", width: "34vw", height: "20vw", rotate: 0,  z: 4, r: 22 },
-      // stack 4
-      { top: "38vw",  left: "66vw", width: "24vw", height: "24vw", rotate: 16, z: 5, r: 26 },
-    ],
-    []
-  );
-
-  const wrapRef = useRef(null);
-
+function useLenis() {
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // entrance
-      gsap.fromTo(
-        ".collage-card",
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.12, ease: "power2.out" }
-      );
-
-      // subtle parallax scrub per card
-      gsap.utils.toArray(".collage-card").forEach((el, i) => {
-        gsap.to(el, {
-          yPercent: i % 2 === 0 ? -6 : -12,
-          ease: "none",
-          scrollTrigger: {
-            trigger: wrapRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-      });
-    }, wrapRef);
-    return () => ctx.revert();
+    const lenis = new Lenis({ lerp: 0.12, wheelMultiplier: 0.9, smoothTouch: false });
+    const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
+    requestAnimationFrame(raf);
+    return () => { lenis.destroy(); };
   }, []);
+}
 
+async function fetchManifest() {
+  const res = await fetch("/art_manifest.json", { cache: "no-store" });
+  if (!res.ok) throw new Error("Could not load art_manifest.json");
+  return res.json();
+}
+
+function sliceIntoStacks(items) {
+  const a = [], b = [], c = [];
+  items.forEach((it, i) => { (i % 3 === 0 ? a : i % 3 === 1 ? b : c).push(it); });
+  return [a, b, c];
+}
+
+const layout1 = [
+  { top: "4vh",  left: "8vw",  w: "w-22", rot: -2.6, z: 12 },
+  { top: "0vh",  left: "26vw", w: "w-20", rot:  3.8, z: 11 },
+  { top: "14vh", left: "18vw", w: "w-24", rot:  0.6, z: 13 },
+  { top: "10vh", left: "40vw", w: "w-18", rot: -7.0, z: 10 },
+  { top: "22vh", left: "30vw", w: "w-26", rot:  2.4, z: 14 },
+  { top: "28vh", left: "46vw", w: "w-20", rot: -3.2, z: 9  }
+];
+
+const layout2 = [
+  { top: "0vh",  left: "18vw", w: "w-26", rot: -1.4, z: 13 },
+  { top: "8vh",  left: "38vw", w: "w-22", rot:  4.2, z: 12 },
+  { top: "18vh", left: "10vw", w: "w-24", rot: -6.5, z: 11 },
+  { top: "26vh", left: "28vw", w: "w-28", rot:  1.0, z: 14 },
+  { top: "34vh", left: "50vw", w: "w-20", rot: -2.2, z: 10 },
+  { top: "40vh", left: "12vw", w: "w-22", rot:  0.8, z: 9  }
+];
+
+const layout3 = [
+  { top: "2vh",  left: "12vw", w: "w-24", rot:  2.2, z: 12 },
+  { top: "12vh", left: "34vw", w: "w-26", rot: -4.8, z: 11 },
+  { top: "24vh", left: "18vw", w: "w-22", rot:  0.0, z: 13 },
+  { top: "28vh", left: "44vw", w: "w-24", rot: -6.0, z: 10 },
+  { top: "36vh", left: "26vw", w: "w-28", rot:  1.6, z: 14 },
+  { top: "44vh", left: "8vw",  w: "w-20", rot: -1.2, z: 9  }
+];
+
+function Stack({ items, layout }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   return (
-    <div className="collage" ref={wrapRef} aria-label="Collage">
-      {images.slice(0, cards.length).map((img, i) => {
-        const c = cards[i];
-        return (
-          <div
-            key={img.image + i}
-            className="collage-card"
-            style={{
-              top: c.top,
-              left: c.left,
-              width: c.width,
-              height: c.height,
-              zIndex: c.z,
-              borderRadius: `${c.r}px`,
-              transform: `rotate(${c.rotate}deg)`,
-            }}
-          >
-            <img src={img.image} alt={img.title || "Artwork"} draggable={false} />
-          </div>
-        );
-      })}
+    <div className="section">
+      <div ref={ref} className="stack">
+        {items.map((item, i) => {
+          const L = layout[i % layout.length];
+          const y = useTransform(scrollYProgress, [0, 1], [i * -60, i * 140]);
+          const r = useTransform(scrollYProgress, [0, 0.5, 1], [L.rot - 6, L.rot, L.rot + 6]);
+          const s = useTransform(scrollYProgress, [0, 1], [0.98, 1.02]);
+          return (
+            <motion.a key={i} href={item.link || item.src || "#"} className={`card ${L.w}`}
+              style={{ top: L.top, left: L.left, zIndex: L.z, y, rotate: r, scale: s }} target="_blank" rel="noreferrer">
+              <img src={item.src} alt={item.title || "art"} />
+            </motion.a>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-function WorkPinned({ images }) {
-  const pinRef = useRef(null);
-  const imgRef = useRef(null);
-  const titleRef = useRef(null);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // pin the section while scrubbing
-      ScrollTrigger.create({
-        trigger: pinRef.current,
-        start: "top top",
-        end: "bottom top",
-        pin: ".work-pin",
-        pinSpacing: false,
-        anticipatePin: 1,
-      });
-
-      // entrance for title/copy
-      gsap.fromTo(
-        titleRef.current,
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: { trigger: pinRef.current, start: "top 70%", toggleActions: "play none none reverse" },
-        }
-      );
-
-      // feature image settles as user scrolls
-      gsap.fromTo(
-        imgRef.current,
-        { scale: 1.08, y: 20, opacity: 0 },
-        {
-          scale: 1,
-          y: 0,
-          opacity: 1,
-          ease: "power1.out",
-          scrollTrigger: { trigger: pinRef.current, start: "top top", end: "bottom top", scrub: true },
-        }
-      );
-    }, pinRef);
-    return () => ctx.revert();
-  }, []);
-
-  const feature = images[3]?.image || images[8]?.image || images[0]?.image || "";
-
-  return (
-    <section id="work" className="work-pin-wrap" ref={pinRef}>
-      <div className="work-pin">
-        <div className="work-card">
-          <div>
-            <h2 className="work-title" ref={titleRef}>Wolf • Alice • White Horses</h2>
-            <p className="work-copy">A scrolling composition where type, gesture, and motion meet. As you move, the work relaxes into place.</p>
-          </div>
-          <img ref={imgRef} className="work-image" src={feature} alt="Feature" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SimpleGrid({ images }) {
-  return (
-    <section className="section">
-      <div className="container">
-        <div className="grid">
-          {images.map((img, i) => (
-            <img key={img.image + i} src={img.image} alt={img.title || "Artwork"} loading="lazy" />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export default function App() {
-  const [images, setImages] = useState([]);
-
+  useLenis();
+  const [data, setData] = useState([]);
   useEffect(() => {
-    fetch("/art_manifest.json")
-      .then((r) => r.json())
-      .then((data) => {
-        const seen = new Set();
-        const clean = data.filter((d) => d && d.image && !seen.has(d.image) && seen.add(d.image));
-        setImages(clean);
-      })
-      .catch(() => setImages([]));
+    fetchManifest().then(setData).catch(() => {
+      setData([
+        { src: "https://picsum.photos/id/1015/1200/800" },
+        { src: "https://picsum.photos/id/1016/1200/800" },
+        { src: "https://picsum.photos/id/1021/1200/800" },
+        { src: "https://picsum.photos/id/1025/1200/800" },
+        { src: "https://picsum.photos/id/1035/1200/800" },
+        { src: "https://picsum.photos/id/1040/1200/800" },
+        { src: "https://picsum.photos/id/1050/1200/800" },
+        { src: "https://picsum.photos/id/1060/1200/800" }
+      ]);
+    });
   }, []);
-
+  const [s1, s2, s3] = useMemo(() => sliceIntoStacks(data), [data]);
   return (
-    <main>
-      <Header />
-
-      <section className="section">
-        <div className="container intro">
-          <LeftRail />
-          <Collage images={images} />
-        </div>
-      </section>
-
-      <WorkPinned images={images} />
-
-      <section className="section">
-        <div className="container">
-          <SimpleGrid images={images.slice(27, 63)} />
-          <SimpleGrid images={images.slice(63, 99)} />
-        </div>
-      </section>
-
-      <section id="about" className="section">
-        <div className="container">
-          <h3>About</h3>
-          <p>Heneni is a studio for unique visual experiences. We design from instinct and arrange for delight, inviting the viewer to participate through motion and playful discovery.</p>
-        </div>
-      </section>
-
-      <section id="contact" className="section">
-        <div className="container">
-          <h3>Contact</h3>
-          <p>Say hello at <a href="mailto:mark@heneniart.com">mark@heneniart.com</a>.</p>
-        </div>
-      </section>
-
-      <div className="footer-spacer" />
-    </main>
+    <div className="page">
+      <aside className="sidebar">
+        <div className="brand">ANNA<br/>MILLS</div>
+        <div className="brand-sub">DESIGN</div>
+        <nav className="nav" style={{ marginTop: 18 }}>
+          <a href="#about">About</a><a href="#work"><strong>Work</strong></a><a href="#contact">Contact</a>
+        </nav>
+        <p className="copy">Welcome to my website! Do stick around. Scrolling is encouraged here, it makes things happen.</p>
+        <a className="nav" style={{ fontWeight: 600 }} href="#play">Play!</a>
+      </aside>
+      <main className="stage">
+        <Stack items={s1} layout={layout1} />
+        <Stack items={s2} layout={layout2} />
+        <Stack items={s3} layout={layout3} />
+      </main>
+    </div>
   );
 }
