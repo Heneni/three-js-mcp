@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 const csvPath = path.join(process.cwd(), 'public', 'artwork.csv');
-const jsonPath = path.join(process.cwd(), 'public', 'art_manifest.json');
+const jsonPath = path.join(process.cwd(), 'art_manifest.json');
 
 const csv = fs.readFileSync(csvPath, 'utf8');
 const lines = csv.split('\n').map(line => line.trim()).filter(line => line && line.startsWith('http'));
