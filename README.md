@@ -1,2 +1,11 @@
-# three-js-mcp
-MCP server for controlling Three.js scenes with basic functions like adding objects, moving objects, rotation control, and scene state management
+# Heneni — ANNA (Pages)
+
+This repo recreates the annamills.xyz scroll experience using React + Vite + Framer Motion + Tailwind,
+with your CSV-fed image manifest.
+
+## Local dev
+
+```bash
+npm i
+npm run dev
+```
