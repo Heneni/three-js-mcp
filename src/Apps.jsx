@@ -1,28 +1,64 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
-// Collage component for displaying a grid of images
-function Collage({ images, title, subtitle }) {
+function AnimatedCollage({ images, range = 60 }) {
+  // Group images into rows of 3 for visual jumbling
+  const rows = [];
+  for (let i = 0; i < images.length; i += 3) {
+    rows.push(images.slice(i, i + 3));
+  }
+
   return (
-    <section className="mb-20">
-      {(title || subtitle) && (
-        <div className="mb-8 text-center">
-          {title && <h2 className="text-2xl font-semibold mb-2">{title}</h2>}
-          {subtitle && <p className="text-gray-500">{subtitle}</p>}
+    <div className="mb-24">
+      {rows.map((row, rowIdx) => (
+        <div key={rowIdx} className="flex gap-7 justify-center mb-0">
+          {row.map((img, idx) => {
+            const ref = useRef(null);
+            const { scrollYProgress } = useScroll({
+              target: ref,
+              offset: ["start end", "end start"]
+            });
+
+            const y = useTransform(
+              scrollYProgress,
+              [0, 1],
+              [-range - (rowIdx + idx) * 8, range + (rowIdx + idx) * 10]
+            );
+            const r = useTransform(
+              scrollYProgress,
+              [0, 1],
+              [-10 + idx * 3, 10 - idx * 3]
+            );
+            const s = useTransform(
+              scrollYProgress,
+              [0, 1],
+              [0.96, 1.08 - idx * 0.02]
+            );
+
+            return (
+              <motion.div
+                ref={ref}
+                style={{
+                  y,
+                  rotate: r,
+                  scale: s
+                }}
+                className="relative will-change-transform select-none"
+                key={img.image}
+              >
+                <motion.img
+                  src={img.image}
+                  alt={img.title || "Artwork"}
+                  style={{ scale: s, rotate: r }}
+                  className="shadow-2xl rounded-xl pointer-events-none max-w-[min(32vw,320px)] h-auto"
+                  loading="lazy"
+                />
+              </motion.div>
+            );
+          })}
         </div>
-      )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-7">
-        {images.map((img, idx) => (
-          <div key={img.image + idx} className="rounded-xl overflow-hidden shadow hover:shadow-lg transition">
-            <img
-              src={img.image}
-              alt={img.title || "Artwork"}
-              className="object-cover w-full h-72"
-              loading="lazy"
-            />
-          </div>
-        ))}
-      </div>
-    </section>
+      ))}
+    </div>
   );
 }
 
@@ -78,13 +114,12 @@ export default function App() {
   const [images, setImages] = useState([]);
 
   useEffect(() => {
-    // Adjust path if your manifest is elsewhere (e.g. public/art_manifest.json)
-    fetch("/src/art_manifest.json")
+    fetch("/art_manifest.json")
       .then((r) => r.json())
       .then((data) => setImages(data));
   }, []);
 
-  // Divide images into collages (customize slice ranges as needed)
+  // Divide images into animated collages (adjust slice ranges for your art)
   const collage1 = images.slice(0, 12);
   const collage2 = images.slice(12, 24);
   const collage3 = images.slice(24, 36);
@@ -93,9 +128,9 @@ export default function App() {
     <main className="bg-white text-black min-h-screen font-sans flex flex-col items-center">
       <Header />
       <section id="work" className="max-w-5xl w-full px-4 py-16">
-        <Collage images={collage1} title="Collage 1" subtitle="First set of images" />
-        <Collage images={collage2} title="Collage 2" subtitle="Second set of images" />
-        <Collage images={collage3} title="Collage 3" subtitle="Third set of images" />
+        <AnimatedCollage images={collage1} />
+        <AnimatedCollage images={collage2} />
+        <AnimatedCollage images={collage3} />
       </section>
       <About />
       <Contact />
