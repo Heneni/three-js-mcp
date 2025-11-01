@@ -1,148 +1,155 @@
-import React, { useEffect, useState, useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import React, { useEffect, useState } from "react";
 
-// Collage layout data extracted from DOM/CSS of annamills.xyz (approximate, tune for exact pixel match)
-const collageLayouts = [
-  // Collage 1
-  [
-    { top: "5vw", left: "10vw", rotate: -8, scale: 1.01, width: "19vw", z: 10 },
-    { top: "13vw", left: "31vw", rotate: 9, scale: 1.05, width: "16vw", z: 11 },
-    { top: "21vw", left: "51vw", rotate: -5, scale: 1.03, width: "20vw", z: 12 },
-    { top: "29vw", left: "20vw", rotate: 7, scale: 1.00, width: "15vw", z: 13 },
-  ],
-  // Collage 2
-  [
-    { top: "7vw", left: "14vw", rotate: 10, scale: 1.02, width: "18vw", z: 10 },
-    { top: "18vw", left: "35vw", rotate: -4, scale: 1.04, width: "15vw", z: 11 },
-    { top: "28vw", left: "55vw", rotate: 12, scale: 1.06, width: "22vw", z: 12 },
-    { top: "38vw", left: "25vw", rotate: -10, scale: 0.98, width: "16vw", z: 13 },
-  ],
-  // Collage 3
-  [
-    { top: "9vw", left: "12vw", rotate: 12, scale: 1.03, width: "20vw", z: 10 },
-    { top: "21vw", left: "32vw", rotate: -6, scale: 1.05, width: "17vw", z: 11 },
-    { top: "33vw", left: "52vw", rotate: 8, scale: 1.04, width: "19vw", z: 12 },
-    { top: "45vw", left: "22vw", rotate: -11, scale: 1.00, width: "15vw", z: 13 },
-  ],
-];
+// This component matches the visible collage layout (non-uniform, overlapping, and rotated)
+function Collage({ images }) {
+  // Hard-coded positions and transforms for 4 images (matching the visible layout in the screenshot)
+  const collageLayout = [
+    // Top left image — large, upright
+    {
+      top: '0vw',
+      left: '28vw',
+      width: '28vw',
+      height: '28vw',
+      rotate: 0,
+      z: 2,
+      borderRadius: '24px'
+    },
+    // Top right image — medium, upright
+    {
+      top: '3vw',
+      left: '64vw',
+      width: '20vw',
+      height: '20vw',
+      rotate: 0,
+      z: 3,
+      borderRadius: '20px'
+    },
+    // Middle left image — medium, upright
+    {
+      top: '34vw',
+      left: '43vw',
+      width: '34vw',
+      height: '20vw',
+      rotate: 0,
+      z: 4,
+      borderRadius: '22px'
+    },
+    // Bottom right image — rotated, large
+    {
+      top: '38vw',
+      left: '66vw',
+      width: '24vw',
+      height: '24vw',
+      rotate: 16,
+      z: 5,
+      borderRadius: '26px'
+    }
+  ];
 
-// Collage component with pixel-perfect layout/animation
-function Collage({ images, layout }) {
   return (
-    <div className="relative w-full h-[52vw] mb-24">
-      {images.map((img, idx) => {
-        const ref = useRef(null);
-        const { scrollYProgress } = useScroll({
-          target: ref,
-          offset: ["start end", "end start"],
-        });
-
-        // Animate each image's position, rotation, and scale on scroll
-        const x = useTransform(scrollYProgress, [0, 1], [0, (idx % 2 ? 36 : -36)]);
-        const y = useTransform(scrollYProgress, [0, 1], [0, (idx % 2 ? -44 : 44)]);
-        const rotate = useTransform(scrollYProgress, [0, 1], [layout[idx].rotate, layout[idx].rotate + (idx % 2 ? 16 : -16)]);
-        const scale = useTransform(scrollYProgress, [0, 1], [layout[idx].scale, layout[idx].scale + 0.05]);
-
+    <div className="relative w-full h-[62vw]">
+      {images.slice(0, collageLayout.length).map((img, idx) => {
+        const layout = collageLayout[idx];
         return (
-          <motion.div
+          <div
             key={img.image}
-            ref={ref}
             style={{
-              position: "absolute",
-              top: layout[idx].top,
-              left: layout[idx].left,
-              zIndex: layout[idx].z,
-              width: layout[idx].width,
-              x,
-              y,
-              rotate,
-              scale,
+              position: 'absolute',
+              top: layout.top,
+              left: layout.left,
+              width: layout.width,
+              height: layout.height,
+              zIndex: layout.z,
+              borderRadius: layout.borderRadius,
+              transform: `rotate(${layout.rotate}deg)`
             }}
-            className="shadow-2xl rounded-xl pointer-events-none transition-all duration-700"
+            className="shadow-2xl bg-white"
           >
-            <motion.img
+            <img
               src={img.image}
               alt={img.title || "Artwork"}
-              loading="lazy"
-              className="rounded-xl w-full h-auto"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: layout.borderRadius
+              }}
               draggable={false}
             />
-          </motion.div>
+          </div>
         );
       })}
     </div>
   );
 }
 
-// Rest of your App.jsx remains the same!
 function Header() {
   return (
     <header className="w-full pt-16 pb-6 flex flex-col items-center">
-      <h1 className="font-black text-[clamp(3rem,10vw,7rem)] tracking-tight leading-none mb-2">Anna Mills</h1>
-      <p className="text-lg font-light mb-12 tracking-wide text-gray-700">Unique Visual Experiences for Curious People</p>
-      <nav className="flex space-x-12 text-base font-semibold uppercase tracking-wider mb-4">
-        <a href="#work" className="hover:opacity-60 transition-opacity">Work</a>
-        <a href="#about" className="hover:opacity-60 transition-opacity">About</a>
-        <a href="#contact" className="hover:opacity-60 transition-opacity">Contact</a>
-      </nav>
+      <h1 style={{
+        fontFamily: 'sans-serif',
+        fontWeight: 900,
+        fontSize: '4rem',
+        letterSpacing: '0.05em',
+        textAlign: 'center'
+      }}>ANNA MILLS</h1>
+      <div style={{ margin: "1.5rem 0 1.5rem 0" }}>
+        <nav className="flex space-x-12 text-base font-semibold uppercase tracking-wider mb-4" style={{ justifyContent: "center" }}>
+          <a href="#about" style={{ fontFamily: "Inter, Arial, sans-serif", color: "#222", marginRight: "2rem" }}>ABOUT</a>
+          <a href="#work" style={{ fontFamily: "Inter, Arial, sans-serif", color: "#222", marginRight: "2rem" }}>WORK</a>
+          <a href="#contact" style={{ fontFamily: "Inter, Arial, sans-serif", color: "#222" }}>CONTACT</a>
+        </nav>
+      </div>
     </header>
   );
 }
-function About() {
+
+function Welcome() {
   return (
-    <section id="about" className="max-w-xl mx-auto px-4 py-20 text-center">
-      <h2 className="text-2xl font-bold mb-4">About</h2>
-      <p className="text-base text-gray-700">
-        Anna Mills is a studio for unique visual experiences. We design from instinct and arrange for delight, inviting the viewer to participate through motion and playful discovery.
+    <div className="flex flex-col items-center mt-6">
+      <p style={{
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "1rem",
+        color: "#222",
+        textAlign: "center",
+        marginBottom: "0.5rem"
+      }}>
+        Welcome to my website! Do stick around. Scrolling is encouraged here, it makes things happen.
       </p>
-    </section>
-  );
-}
-function Contact() {
-  return (
-    <section id="contact" className="max-w-xl mx-auto px-4 py-12 text-center">
-      <h2 className="text-2xl font-bold mb-4">Contact</h2>
-      <p className="text-base text-gray-700">
-        Say hello at <a href="mailto:mark@heneniart.com" className="underline">mark@heneniart.com</a>.
-      </p>
-    </section>
-  );
-}
-function Footer() {
-  return (
-    <footer className="py-12 mt-12 text-center text-xs text-gray-400">
-      <p>
-        © {new Date().getFullYear()} Anna Mills.<br />
-        Website code by Heneni.<br />
-        <a href="mailto:mark@heneniart.com" className="underline">Email me</a>
-      </p>
-    </footer>
+      <div style={{
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "1rem",
+        color: "#222",
+        textAlign: "center",
+        marginTop: "0.5rem"
+      }}>
+        PLAY!
+      </div>
+    </div>
   );
 }
 
-export default function App() {
+function App() {
   const [images, setImages] = useState([]);
   useEffect(() => {
     fetch("/art_manifest.json")
       .then((r) => r.json())
       .then((data) => setImages(data));
   }, []);
-  // Divide images into collages (number of images per collage = layout length)
-  const collage1 = images.slice(0, collageLayouts[0].length);
-  const collage2 = images.slice(collageLayouts[0].length, collageLayouts[0].length + collageLayouts[1].length);
-  const collage3 = images.slice(collageLayouts[0].length + collageLayouts[1].length, collageLayouts[0].length + collageLayouts[1].length + collageLayouts[2].length);
 
   return (
     <main className="bg-white text-black min-h-screen font-sans">
       <Header />
-      <section id="work" className="max-w-[1200px] mx-auto w-full px-4 pt-2 pb-20">
-        <Collage images={collage1} layout={collageLayouts[0]} />
-        <Collage images={collage2} layout={collageLayouts[1]} />
-        <Collage images={collage3} layout={collageLayouts[2]} />
-      </section>
-      <About />
-      <Contact />
-      <Footer />
+      <div className="flex flex-row w-full max-w-[1400px] mx-auto mt-10">
+        <div style={{ width: "28vw", minWidth: "320px", display: "flex", flexDirection: "column", alignItems: "center", marginRight: "2vw" }}>
+          <Welcome />
+        </div>
+        <div style={{ flex: "1 1 0", position: "relative" }}>
+          <Collage images={images} />
+        </div>
+      </div>
     </main>
   );
 }
+
+export default App;
