@@ -18,6 +18,10 @@ async function fetchManifest() {
 }
 
 function sliceIntoStacks(items) {
+  // Ensure items is always an array to prevent undefined/null errors
+  if (!Array.isArray(items)) {
+    return [[], [], []];
+  }
   const a = [], b = [], c = [];
   items.forEach((it, i) => { (i % 3 === 0 ? a : i % 3 === 1 ? b : c).push(it); });
   return [a, b, c];
@@ -53,10 +57,12 @@ const layout3 = [
 function Stack({ items, layout }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  // Defensive check: ensure items is an array before mapping
+  const safeItems = Array.isArray(items) ? items : [];
   return (
     <div className="section">
       <div ref={ref} className="stack">
-        {items.map((item, i) => {
+        {safeItems.map((item, i) => {
           const L = layout[i % layout.length];
           const y = useTransform(scrollYProgress, [0, 1], [i * -60, i * 140]);
           const r = useTransform(scrollYProgress, [0, 0.5, 1], [L.rot - 6, L.rot, L.rot + 6]);
@@ -77,7 +83,24 @@ export default function App() {
   useLenis();
   const [data, setData] = useState([]);
   useEffect(() => {
-    fetchManifest().then(setData).catch(() => {
+    fetchManifest().then((manifest) => {
+      // Ensure the fetched data is an array before setting state
+      if (Array.isArray(manifest)) {
+        setData(manifest);
+      } else {
+        // Fall back to default images if manifest is not an array
+        setData([
+          { src: "https://picsum.photos/id/1015/1200/800" },
+          { src: "https://picsum.photos/id/1016/1200/800" },
+          { src: "https://picsum.photos/id/1021/1200/800" },
+          { src: "https://picsum.photos/id/1025/1200/800" },
+          { src: "https://picsum.photos/id/1035/1200/800" },
+          { src: "https://picsum.photos/id/1040/1200/800" },
+          { src: "https://picsum.photos/id/1050/1200/800" },
+          { src: "https://picsum.photos/id/1060/1200/800" }
+        ]);
+      }
+    }).catch(() => {
       setData([
         { src: "https://picsum.photos/id/1015/1200/800" },
         { src: "https://picsum.photos/id/1016/1200/800" },
