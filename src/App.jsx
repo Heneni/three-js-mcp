@@ -1,218 +1,159 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import React, { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 
-gsap.registerPlugin(ScrollTrigger);
-
-function Header() {
-  return (
-    <header className="header">
-      <h1 className="header-title">ANNA MILLS</h1>
-      <nav className="header-nav">
-        <a href="#about">ABOUT</a>
-        <a href="#work">WORK</a>
-        <a href="#contact">CONTACT</a>
-      </nav>
-    </header>
-  );
-}
-
+// ————————————————————————————————
+// LEFT RAIL (sticky) — matches proportions of annamills.xyz
+// ————————————————————————————————
 function LeftRail() {
   return (
-    <aside className="rail">
-      <p>Welcome to my website! Do stick around. Scrolling is encouraged here, it makes things happen.</p>
-      <div style="margin-top:8px; text-transform:uppercase; font-weight:700;">PLAY!</div>
+    <aside
+      className="fixed left-[4vw] top-[6vh] w-[16vw] min-w-[180px] max-w-[260px] select-none"
+      aria-label="Site intro"
+    >
+      <h1 className="leading-[0.9] tracking-tight mb-6">
+        <span className="block text-[5.8vw] min-[1200px]:text-[70px] font-black">ANNA</span>
+        <span className="block text-[5.8vw] min-[1200px]:text-[70px] font-black">MILLS</span>
+        <span className="block text-[2.4vw] min-[1200px]:text-[28px] font-medium opacity-80">DESIGN</span>
+      </h1>
+
+      <img
+        src="/images/anna-portrait.png"
+        alt=""
+        className="w-[70%] mb-4 pointer-events-none"
+        draggable="false"
+      />
+
+      <nav className="text-[11px] tracking-[0.08em] mb-3 space-x-5">
+        <a href="#about" className="hover:opacity-60">ABOUT</a>
+        <a href="#work" className="hover:opacity-60">WORK</a>
+        <a href="#contact" className="hover:opacity-60">CONTACT</a>
+      </nav>
+
+      <p className="text-[11px] leading-tight mb-3 opacity-80">
+        Welcome to my website! Do stick around.
+        Scrolling is encouraged here, it makes things happen.
+      </p>
+
+      <button
+        type="button"
+        className="text-[11px] underline underline-offset-4 hover:opacity-70"
+      >
+        PLAY!
+      </button>
     </aside>
   );
 }
 
-function Collage({ images }) {
-  // Four-card collage with deliberate placements and subtle parallax
-  const cards = useMemo(
-    () => [
-      { top: "0vw",  left: "28vw", width: "28vw", height: "28vw", rotate: 0,  z: 2, r: 24 },
-      { top: "3vw",  left: "64vw", width: "20vw", height: "20vw", rotate: 0,  z: 3, r: 20 },
-      { top: "34vw", left: "43vw", width: "34vw", height: "20vw", rotate: 0,  z: 4, r: 22 },
-      { top: "38vw", left: "66vw", width: "24vw", height: "24vw", rotate: 16, z: 5, r: 26 },
-    ],
-    []
-  );
+// ————————————————————————————————
+// COLLAGE ENGINE
+// Absolute positions in vw/vh for pixel-consistent stacks.
+// Each item gets subtle x/y/rotate/scale transforms scrubbed to scroll.
+// ————————————————————————————————
 
-  const wrapRef = useRef(null);
+/**
+ * Layout notes:
+ *  • The reference site uses three obvious “stacks” that sit roughly
+ *    center/right while the left rail is sticky. We fix widths in vw so
+ *    proportions stay identical across breakpoints.
+ *  • top/left are in viewport units; width is in vw; z is manual layer order.
+ *  • rotate/scale are base values; tiny deltas are added from scroll.
+ */
+const stack1 = [
+  { top: "6vh",  left: "32vw", width: "22vw", rotate: -4,  scale: 1.02, z: 10, src: "/images/stack/a1.jpg" },
+  { top: "3vh",  left: "46vw", width: "18vw", rotate:  7,  scale: 1.00, z: 12, src: "/images/stack/a2.jpg" },
+  { top: "18vh", left: "40vw", width: "20vw", rotate: -2,  scale: 1.04, z: 11, src: "/images/stack/a3.jpg" },
+  { top: "26vh", left: "52vw", width: "16vw", rotate:  10, scale: 0.99, z: 13, src: "/images/stack/a4.jpg" }
+];
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // gentle entrance & parallax on scroll
-      gsap.fromTo(
-        ".collage-card",
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.8, stagger: 0.12, ease: "power2.out" }
-      );
+const stack2 = [
+  { top: "46vh", left: "34vw", width: "24vw", rotate:  5,  scale: 1.03, z: 10, src: "/images/stack/b1.jpg" },
+  { top: "54vh", left: "49vw", width: "19vw", rotate: -8,  scale: 1.02, z: 12, src: "/images/stack/b2.jpg" },
+  { top: "66vh", left: "41vw", width: "20vw", rotate:  2,  scale: 1.05, z: 11, src: "/images/stack/b3.jpg" },
+  { top: "64vh", left: "57vw", width: "16vw", rotate:  12, scale: 1.00, z: 13, src: "/images/stack/b4.jpg" }
+];
 
-      gsap.utils.toArray(".collage-card").forEach((el, i) => {
-        gsap.to(el, {
-          yPercent: i % 2 === 0 ? -6 : -12,
-          ease: "none",
-          scrollTrigger: {
-            trigger: wrapRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true,
-          },
-        });
-      });
-    }, wrapRef);
-    return () => ctx.revert();
-  }, []);
+const stack3 = [
+  { top: "98vh", left: "36vw", width: "22vw", rotate: -6,  scale: 1.01, z: 10, src: "/images/stack/c1.jpg" },
+  { top: "104vh",left: "50vw", width: "18vw", rotate:  7,  scale: 1.00, z: 12, src: "/images/stack/c2.jpg" },
+  { top: "118vh",left: "42vw", width: "20vw", rotate: -1,  scale: 1.04, z: 11, src: "/images/stack/c3.jpg" },
+  { top: "128vh",left: "58vw", width: "16vw", rotate:  9,  scale: 0.99, z: 13, src: "/images/stack/c4.jpg" }
+];
+
+// A single collage “section” that scrubs item transforms to its own scroll range.
+function CollageSection({ layout }) {
+  const ref = useRef(null);
+
+  // Tie transforms to the section’s vertical progress.
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"]
+  });
+
+  // Small shared curves to keep the motion subtle and cohesive.
+  const y      = useTransform(scrollYProgress, [0, 1], [0, -60]);    // gentle upward drift
+  const x      = useTransform(scrollYProgress, [0, 1], [0,  40]);    // slight right push
+  const rotAdd = useTransform(scrollYProgress, [0, 1], [0,  -6]);    // mild counter-twist
+  const sclAdd = useTransform(scrollYProgress, [0, 1], [0.0, 0.04]); // tiny scale up
 
   return (
-    <div className="collage" ref={wrapRef} aria-label="Collage">
-      {images.slice(0, cards.length).map((img, i) => {
-        const c = cards[i];
+    <section ref={ref} className="relative h-[120vh] w-full">
+      {layout.map((item, idx) => {
+        // Stagger strength so deeper z-layers move a hair differently.
+        const zMod = (idx % 3) * 0.25;
+
+        const ix = useTransform(x,    v => v * (0.8 + zMod));
+        const iy = useTransform(y,    v => v * (0.8 + zMod));
+        const ir = useTransform(rotAdd, v => item.rotate + v * (0.9 + zMod));
+        const is = useTransform(sclAdd, v => item.scale  + v * (1.0 + zMod));
+
         return (
-          <div
-            key={img.image + i}
-            className="collage-card"
+          <motion.img
+            key={idx}
+            src={item.src}
+            alt=""
+            draggable="false"
+            className="rounded-[14px] shadow-[0_2px_10px_rgba(0,0,0,0.08)] will-change-transform"
             style={{
-              top: c.top, left: c.left, width: c.width, height: c.height, zIndex: c.z,
-              borderRadius: `${c.r}px`, transform: `rotate(${c.rotate}deg)`
+              position: "absolute",
+              top: item.top,
+              left: item.left,
+              width: item.width,
+              zIndex: item.z,
+              x: ix,
+              y: iy,
+              rotate: ir,
+              scale: is
             }}
-          >
-            <img src={img.image} alt={img.title || "Artwork"} draggable={false} />
-          </div>
+          />
         );
       })}
-    </div>
-  );
-}
-
-function WorkPinned({ images }) {
-  const pinRef = useRef(null);
-  const imgRef = useRef(null);
-  const titleRef = useRef(null);
-
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Pin the whole card while we scrub copy + image in
-      ScrollTrigger.create({
-        trigger: pinRef.current,
-        start: "top top",
-        end: "bottom top",
-        pin: ".work-pin",
-        pinSpacing: false,
-        anticipatePin: 1
-      });
-
-      // Text rise-in
-      gsap.fromTo(
-        titleRef.current,
-        { y: 40, opacity: 0 },
-        {
-          y: 0, opacity: 1, duration: 0.8,
-          ease: "power2.out",
-          scrollTrigger: { trigger: pinRef.current, start: "top 70%", toggleActions: "play none none reverse" }
-        }
-      );
-
-      // Image scale/settle as user scrolls across the pinned span
-      gsap.fromTo(
-        imgRef.current,
-        { scale: 1.08, y: 20, opacity: 0 },
-        {
-          scale: 1, y: 0, opacity: 1, ease: "power1.out",
-          scrollTrigger: { trigger: pinRef.current, start: "top top", end: "bottom top", scrub: true }
-        }
-      );
-    }, pinRef);
-    return () => ctx.revert();
-  }, []);
-
-  const feature =
-    images[3]?.image || images[8]?.image || images[0]?.image || "";
-
-  return (
-    <section id="work" className="work-pin-wrap" ref={pinRef}>
-      <div className="work-pin">
-        <div className="work-card">
-          <div>
-            <h2 className="work-title" ref={titleRef}>Wolf • Alice • White Horses</h2>
-            <p className="work-copy">
-              A scrolling composition where type, gesture, and motion meet. As you move, the work relaxes into place.
-            </p>
-          </div>
-          <img ref={imgRef} className="work-image" src={feature} alt="Feature" />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function SimpleGrid({ images }) {
-  return (
-    <section className="section">
-      <div className="container">
-        <div className="grid">
-          {images.map((img, i) => (
-            <img key={img.image + i} src={img.image} alt={img.title || "Artwork"} loading="lazy" />
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
 
 export default function App() {
-  const [images, setImages] = useState([]);
-
-  useEffect(() => {
-    fetch("/art_manifest.json")
-      .then(r => r.json())
-      .then(data => {
-        const seen = new Set();
-        const clean = data.filter(d => d && d.image && !seen.has(d.image) && seen.add(d.image));
-        setImages(clean);
-      })
-      .catch(() => setImages([]));
-  }, []);
-
   return (
-    <main>
-      <Header />
+    <div id="work" className="min-h-[320vh] bg-[#fff] text-black">
+      <LeftRail />
 
-      <section className="section">
-        <div className="container intro">
-          <LeftRail />
-          <Collage images={images} />
-        </div>
-      </section>
+      {/* The scrollable canvas lives to the right of the rail; reserve that space */}
+      <main className="ml-[24vw] pr-[6vw]">
+        {/* Give a little breathing room above first stack to match the reference */}
+        <div className="h-[10vh]" />
 
-      <WorkPinned images={images} />
+        <CollageSection layout={stack1} />
+        <CollageSection layout={stack2} />
+        <CollageSection layout={stack3} />
 
-      <section className="section">
-        <div className="container">
-          <SimpleGrid images={images.slice(27, 63)} />
-          <SimpleGrid images={images.slice(63, 99)} />
-        </div>
-      </section>
-
-      <section id="about" className="section">
-        <div className="container">
-          <h3>About</h3>
-          <p>
-            Heneni is a studio for unique visual experiences. We design from instinct and arrange for delight,
-            inviting the viewer to participate through motion and playful discovery.
-          </p>
-        </div>
-      </section>
-
-      <section id="contact" className="section">
-        <div className="container">
-          <h3>Contact</h3>
-          <p>Say hello at <a href="mailto:mark@heneniart.com">mark@heneniart.com</a>.</p>
-        </div>
-      </section>
-
-      <div className="footer-spacer" />
-    </main>
+        {/* Below the stacks, drop into large project tiles (the reference shows this) */}
+        <section className="relative w-full mt-[16vh]">
+          <div className="grid grid-cols-2 gap-[6vw]">
+            <img src="/images/tiles/tile1.jpg" alt="" className="rounded-[18px]" />
+            <img src="/images/tiles/tile2.jpg" alt="" className="rounded-[18px]" />
+          </div>
+          <div className="h-[30vh]" />
+        </section>
+      </main>
+    </div>
   );
 }
