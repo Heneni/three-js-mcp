@@ -1,12 +1,23 @@
-import fs from 'fs';
-import path from 'path';
-
-const csvPath = path.join(process.cwd(), 'public', 'artwork.csv');
-const jsonPath = path.join(process.cwd(), 'art_manifest.json');
-
-const csv = fs.readFileSync(csvPath, 'utf8');
-const lines = csv.split('\n').map(line => line.trim()).filter(line => line && line.startsWith('http'));
-const images = lines.map(url => ({ image: url, title: "" }));
-
-fs.writeFileSync(jsonPath, JSON.stringify(images, null, 2));
-console.log('Converted artwork.csv to art_manifest.json');
+{
+  "name": "annamills-clone",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "framer-motion": "^11.0.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "tailwindcss": "^3.4.9",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20"
+  }
+}
