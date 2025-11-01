@@ -8,7 +8,10 @@ Animated, scroll-reactive collage site deployable on Vercel.
 - Vercel auto-builds, and your site updates.
 
 ## Local development
-```bash
+```
+bash
 npm install
 npm run dev
 ```
+
+<!-- Trigger redeploy: 2025-11-01 20:02 UTC -->
