@@ -4,3 +4,22 @@
 @tailwind utilities;
 
 /* your custom CSS can go below */
+:root { --col-left: 280px; --pad: 28px; --card-radius: 18px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; background: #fff; color: #111; }
+body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; height: auto; border-radius: var(--card-radius); }
+.page { display: grid; grid-template-columns: var(--col-left) 1fr; column-gap: 40px; min-height: 100dvh; }
+.sidebar { position: sticky; top: 0; height: 100dvh; padding: 28px 18px 28px 28px; display: flex; flex-direction: column; align-items: flex-start; gap: 18px; }
+.brand { font-weight: 800; font-size: 44px; line-height: 0.9; letter-spacing: 0.02em; }
+.brand-sub { font-size: 11px; letter-spacing: 0.2em; opacity: 0.75; }
+.nav { display: flex; gap: 22px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; }
+.copy { width: 220px; font-size: 12px; line-height: 1.35; opacity: 0.8; }
+.stage { position: relative; width: 100%; min-height: 300dvh; }
+.section { position: relative; height: 160dvh; margin-bottom: 14dvh; }
+.stack { position: sticky; top: 12dvh; height: 76dvh; }
+.card { position: absolute; will-change: transform; transform-style: preserve-3d; box-shadow: 0 6px 28px rgba(0,0,0,.12); }
+.w-18 { width: 18vw; } .w-20 { width: 20vw; } .w-22 { width: 22vw; } .w-24 { width: 24vw; } .w-26 { width: 26vw; } .w-28 { width: 28vw; }
+@media (max-width: 960px) { :root { --col-left: 200px; } .section { height: 140dvh; } .stack { top: 8dvh; height: 70dvh; } }
+
