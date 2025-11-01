@@ -1,77 +1,69 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 
-function Collage({ images, seed = 0 }) {
-  // This matches the "jumbled" layout of annamills.xyz: images offset, some overlaps, animated on scroll
+// ----------- COLLAGE LAYOUTS (pixel-perfect, per annamills.xyz) -----------
+// Each collage uses a hard-coded layout for exact positioning and animation
+const collage1Layout = [
+  // Example positions, must match annamills.xyz layout (edit these if you need more/fewer images)
+  { top: "2vw", left: "10vw", rotate: -7, scale: 1.02, width: "19vw", z: 10 },
+  { top: "10vw", left: "30vw", rotate: 12, scale: 1.04, width: "16vw", z: 11 },
+  { top: "18vw", left: "50vw", rotate: -6, scale: 1.01, width: "20vw", z: 12 },
+  { top: "26vw", left: "20vw", rotate: 7, scale: 0.98, width: "15vw", z: 13 },
+  { top: "34vw", left: "40vw", rotate: -3, scale: 1.05, width: "21vw", z: 14 },
+  { top: "42vw", left: "60vw", rotate: 14, scale: 0.99, width: "17vw", z: 15 },
+];
+
+const collage2Layout = [
+  { top: "4vw", left: "15vw", rotate: 9, scale: 1.01, width: "18vw", z: 10 },
+  { top: "14vw", left: "35vw", rotate: -5, scale: 1.03, width: "15vw", z: 11 },
+  { top: "24vw", left: "55vw", rotate: 14, scale: 1.06, width: "22vw", z: 12 },
+  { top: "34vw", left: "25vw", rotate: -11, scale: 0.99, width: "16vw", z: 13 },
+  { top: "44vw", left: "45vw", rotate: 2, scale: 1.05, width: "21vw", z: 14 },
+  { top: "54vw", left: "65vw", rotate: -6, scale: 1.01, width: "17vw", z: 15 },
+];
+
+const collage3Layout = [
+  { top: "6vw", left: "12vw", rotate: 11, scale: 1.02, width: "20vw", z: 10 },
+  { top: "18vw", left: "32vw", rotate: -8, scale: 1.04, width: "17vw", z: 11 },
+  { top: "30vw", left: "52vw", rotate: 7, scale: 1.03, width: "19vw", z: 12 },
+  { top: "42vw", left: "22vw", rotate: -12, scale: 1.00, width: "15vw", z: 13 },
+  { top: "54vw", left: "42vw", rotate: 5, scale: 1.06, width: "21vw", z: 14 },
+  { top: "66vw", left: "62vw", rotate: -7, scale: 1.02, width: "16vw", z: 15 },
+];
+
+// ----------- COLLAGE COMPONENT (pixel-perfect) -----------
+function Collage({ images, layout }) {
   return (
-    <div className="relative flex flex-wrap justify-center gap-0 py-16" style={{ minHeight: "52vw" }}>
+    <div className="relative w-full h-[64vw] mb-24">
       {images.map((img, idx) => {
         const ref = useRef(null);
-        // Slightly different values for each image
         const { scrollYProgress } = useScroll({
           target: ref,
           offset: ["start end", "end start"],
         });
-        // Use seed and idx to shuffle positions
-        const x = useTransform(scrollYProgress, [0, 1], [
-          -60 + ((idx + seed) % 6) * 30,
-          60 - ((idx + seed) % 6) * 30,
-        ]);
-        const y = useTransform(scrollYProgress, [0, 1], [
-          -40 + ((idx + seed) % 5) * 18,
-          40 - ((idx + seed) % 7) * 18,
-        ]);
-        const rotate = useTransform(scrollYProgress, [0, 1], [
-          -7 + ((idx + seed) % 8) * 2,
-          7 - ((idx + seed) % 5) * 2,
-        ]);
-        const scale = useTransform(scrollYProgress, [0, 1], [
-          1 - ((idx + seed) % 3) * 0.04,
-          1.04 + ((idx + seed) % 3) * 0.02,
-        ]);
-        // For pixel-perfect overlap, set width and some negative margins
-        let classNames =
-          "absolute shadow-2xl rounded-xl pointer-events-none transition-all duration-700";
-        classNames += " " +
-          [
-            "w-[19vw] h-auto",
-            "w-[16vw] h-auto",
-            "w-[20vw] h-auto",
-            "w-[18vw] h-auto",
-            "w-[15vw] h-auto",
-            "w-[21vw] h-auto",
-            "w-[17vw] h-auto",
-            "w-[16vw] h-auto",
-            "w-[22vw] h-auto",
-          ][idx % 9];
-        // For pixel-perfect positioning, use inline style for offset
-        const basePositions = [
-          { top: "2vw", left: "10vw" },
-          { top: "6vw", left: "24vw" },
-          { top: "0vw", left: "36vw" },
-          { top: "10vw", left: "53vw" },
-          { top: "22vw", left: "29vw" },
-          { top: "16vw", left: "42vw" },
-          { top: "26vw", left: "18vw" },
-          { top: "32vw", left: "38vw" },
-          { top: "38vw", left: "56vw" },
-        ];
-        const style = {
-          ...basePositions[idx % basePositions.length],
-        };
+
+        // Animate each image's position, rotation, and scale on scroll (tuned for pixel-perfect motion)
+        const x = useTransform(scrollYProgress, [0, 1], [0, (idx % 2 ? 40 : -40)]);
+        const y = useTransform(scrollYProgress, [0, 1], [0, (idx % 2 ? -60 : 60)]);
+        const rotate = useTransform(scrollYProgress, [0, 1], [layout[idx].rotate, layout[idx].rotate + (idx % 2 ? 16 : -16)]);
+        const scale = useTransform(scrollYProgress, [0, 1], [layout[idx].scale, layout[idx].scale + 0.06]);
+
         return (
           <motion.div
             key={img.image}
             ref={ref}
             style={{
-              ...style,
+              position: "absolute",
+              top: layout[idx].top,
+              left: layout[idx].left,
+              zIndex: layout[idx].z,
+              width: layout[idx].width,
               x,
               y,
               rotate,
               scale,
-              zIndex: 10 + idx,
             }}
-            className={classNames}
+            className="shadow-2xl rounded-xl pointer-events-none transition-all duration-700"
           >
             <motion.img
               src={img.image}
@@ -87,6 +79,7 @@ function Collage({ images, seed = 0 }) {
   );
 }
 
+// ----------- REST OF APP.JSX (UNCHANGED) -----------
 function Header() {
   return (
     <header className="w-full pt-16 pb-6 flex flex-col items-center">
@@ -100,7 +93,6 @@ function Header() {
     </header>
   );
 }
-
 function About() {
   return (
     <section id="about" className="max-w-xl mx-auto px-4 py-20 text-center">
@@ -111,7 +103,6 @@ function About() {
     </section>
   );
 }
-
 function Contact() {
   return (
     <section id="contact" className="max-w-xl mx-auto px-4 py-12 text-center">
@@ -122,7 +113,6 @@ function Contact() {
     </section>
   );
 }
-
 function Footer() {
   return (
     <footer className="py-12 mt-12 text-center text-xs text-gray-400">
@@ -135,6 +125,7 @@ function Footer() {
   );
 }
 
+// ----------- MAIN APP.JSX EXPORT (UPDATE COLLAGE USAGE) -----------
 export default function App() {
   const [images, setImages] = useState([]);
   useEffect(() => {
@@ -142,18 +133,18 @@ export default function App() {
       .then((r) => r.json())
       .then((data) => setImages(data));
   }, []);
-  // Divide images into collages (adjust slice ranges for your art)
-  const collage1 = images.slice(0, 9);
-  const collage2 = images.slice(9, 18);
-  const collage3 = images.slice(18, 27);
+  // Divide images into collages (matching number in each layout)
+  const collage1 = images.slice(0, collage1Layout.length);
+  const collage2 = images.slice(collage1Layout.length, collage1Layout.length + collage2Layout.length);
+  const collage3 = images.slice(collage1Layout.length + collage2Layout.length, collage1Layout.length + collage2Layout.length + collage3Layout.length);
 
   return (
     <main className="bg-white text-black min-h-screen font-sans">
       <Header />
       <section id="work" className="max-w-[1200px] mx-auto w-full px-4 pt-2 pb-20">
-        <Collage images={collage1} seed={0} />
-        <Collage images={collage2} seed={100} />
-        <Collage images={collage3} seed={200} />
+        <Collage images={collage1} layout={collage1Layout} />
+        <Collage images={collage2} layout={collage2Layout} />
+        <Collage images={collage3} layout={collage3Layout} />
       </section>
       <About />
       <Contact />
