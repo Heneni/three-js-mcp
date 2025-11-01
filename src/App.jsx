@@ -54,26 +54,32 @@ const layout3 = [
   { top: "44vh", left: "8vw",  w: "w-20", rot: -1.2, z: 9  }
 ];
 
+function Card({ item, index, layout, scrollYProgress }) {
+  const L = layout[index % layout.length];
+  const y = useTransform(scrollYProgress, [0, 1], [index * -60, index * 140]);
+  const r = useTransform(scrollYProgress, [0, 0.5, 1], [L.rot - 6, L.rot, L.rot + 6]);
+  const s = useTransform(scrollYProgress, [0, 1], [0.98, 1.02]);
+  
+  return (
+    <motion.a href={item.link || item.src || item.image || "#"} className={`card ${L.w}`}
+      style={{ top: L.top, left: L.left, zIndex: L.z, y, rotate: r, scale: s }} target="_blank" rel="noreferrer">
+      <img src={item.src || item.image} alt={item.title || "art"} />
+    </motion.a>
+  );
+}
+
 function Stack({ items, layout }) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   // Defensive check: ensure items is an array before mapping
   const safeItems = Array.isArray(items) ? items : [];
+  
   return (
     <div className="section">
       <div ref={ref} className="stack">
-        {safeItems.map((item, i) => {
-          const L = layout[i % layout.length];
-          const y = useTransform(scrollYProgress, [0, 1], [i * -60, i * 140]);
-          const r = useTransform(scrollYProgress, [0, 0.5, 1], [L.rot - 6, L.rot, L.rot + 6]);
-          const s = useTransform(scrollYProgress, [0, 1], [0.98, 1.02]);
-          return (
-            <motion.a key={i} href={item.link || item.src || "#"} className={`card ${L.w}`}
-              style={{ top: L.top, left: L.left, zIndex: L.z, y, rotate: r, scale: s }} target="_blank" rel="noreferrer">
-              <img src={item.src} alt={item.title || "art"} />
-            </motion.a>
-          );
-        })}
+        {safeItems.map((item, i) => (
+          <Card key={i} item={item} index={i} layout={layout} scrollYProgress={scrollYProgress} />
+        ))}
       </div>
     </div>
   );
@@ -81,36 +87,27 @@ function Stack({ items, layout }) {
 
 export default function App() {
   useLenis();
-  const [data, setData] = useState([]);
+  // Initialize with a default array to prevent empty state that causes hook inconsistencies
+  const defaultData = [
+    { src: "https://picsum.photos/id/1015/1200/800" },
+    { src: "https://picsum.photos/id/1016/1200/800" },
+    { src: "https://picsum.photos/id/1021/1200/800" },
+    { src: "https://picsum.photos/id/1025/1200/800" },
+    { src: "https://picsum.photos/id/1035/1200/800" },
+    { src: "https://picsum.photos/id/1040/1200/800" },
+    { src: "https://picsum.photos/id/1050/1200/800" },
+    { src: "https://picsum.photos/id/1060/1200/800" }
+  ];
+  const [data, setData] = useState(defaultData);
   useEffect(() => {
     fetchManifest().then((manifest) => {
       // Ensure the fetched data is an array before setting state
-      if (Array.isArray(manifest)) {
+      if (Array.isArray(manifest) && manifest.length > 0) {
         setData(manifest);
-      } else {
-        // Fall back to default images if manifest is not an array
-        setData([
-          { src: "https://picsum.photos/id/1015/1200/800" },
-          { src: "https://picsum.photos/id/1016/1200/800" },
-          { src: "https://picsum.photos/id/1021/1200/800" },
-          { src: "https://picsum.photos/id/1025/1200/800" },
-          { src: "https://picsum.photos/id/1035/1200/800" },
-          { src: "https://picsum.photos/id/1040/1200/800" },
-          { src: "https://picsum.photos/id/1050/1200/800" },
-          { src: "https://picsum.photos/id/1060/1200/800" }
-        ]);
       }
+      // If manifest is invalid, keep the default data
     }).catch(() => {
-      setData([
-        { src: "https://picsum.photos/id/1015/1200/800" },
-        { src: "https://picsum.photos/id/1016/1200/800" },
-        { src: "https://picsum.photos/id/1021/1200/800" },
-        { src: "https://picsum.photos/id/1025/1200/800" },
-        { src: "https://picsum.photos/id/1035/1200/800" },
-        { src: "https://picsum.photos/id/1040/1200/800" },
-        { src: "https://picsum.photos/id/1050/1200/800" },
-        { src: "https://picsum.photos/id/1060/1200/800" }
-      ]);
+      // On error, keep the default data (already set in useState)
     });
   }, []);
   const [s1, s2, s3] = useMemo(() => sliceIntoStacks(data), [data]);
