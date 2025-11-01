@@ -1,112 +1,57 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
-import Lenis from "lenis";
+three-js-mcp
 
-function useLenis() {
-  useEffect(() => {
-    const lenis = new Lenis({ lerp: 0.12, wheelMultiplier: 0.9, smoothTouch: false });
-    const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
-    requestAnimationFrame(raf);
-    return () => { lenis.destroy(); };
-  }, []);
-}
+7t5DnYqsw
 
-async function fetchManifest() {
-  const res = await fetch("/art_manifest.json", { cache: "no-store" });
-  if (!res.ok) throw new Error("Could not load art_manifest.json");
-  return res.json();
-}
 
-function sliceIntoStacks(items) {
-  const a = [], b = [], c = [];
-  items.forEach((it, i) => { (i % 3 === 0 ? a : i % 3 === 1 ? b : c).push(it); });
-  return [a, b, c];
-}
+Find…
+F
 
-const layout1 = [
-  { top: "4vh",  left: "8vw",  w: "w-22", rot: -2.6, z: 12 },
-  { top: "0vh",  left: "26vw", w: "w-20", rot:  3.8, z: 11 },
-  { top: "14vh", left: "18vw", w: "w-24", rot:  0.6, z: 13 },
-  { top: "10vh", left: "40vw", w: "w-18", rot: -7.0, z: 10 },
-  { top: "22vh", left: "30vw", w: "w-26", rot:  2.4, z: 14 },
-  { top: "28vh", left: "46vw", w: "w-20", rot: -3.2, z: 9  }
-];
+Deployment Details
+Created
+github/Heneni
+Heneni
+7m ago
+Status
+Ready
+Latest
+Duration
+9s
+7m ago
+Environment
+Production
+Current
+Domains
+three-js-mcp.vercel.app
++1
+three-js-mcp-git-main-maahks-projects.vercel.app
+three-js-msmsa9ib6-maahks-projects.vercel.app
+Source
+main
+430e24d
+Merge pull request #1 from Heneni/copilot/fix-vite-config-issues
 
-const layout2 = [
-  { top: "0vh",  left: "18vw", w: "w-26", rot: -1.4, z: 13 },
-  { top: "8vh",  left: "38vw", w: "w-22", rot:  4.2, z: 12 },
-  { top: "18vh", left: "10vw", w: "w-24", rot: -6.5, z: 11 },
-  { top: "26vh", left: "28vw", w: "w-28", rot:  1.0, z: 14 },
-  { top: "34vh", left: "50vw", w: "w-20", rot: -2.2, z: 10 },
-  { top: "40vh", left: "12vw", w: "w-22", rot:  0.8, z: 9  }
-];
-
-const layout3 = [
-  { top: "2vh",  left: "12vw", w: "w-24", rot:  2.2, z: 12 },
-  { top: "12vh", left: "34vw", w: "w-26", rot: -4.8, z: 11 },
-  { top: "24vh", left: "18vw", w: "w-22", rot:  0.0, z: 13 },
-  { top: "28vh", left: "44vw", w: "w-24", rot: -6.0, z: 10 },
-  { top: "36vh", left: "26vw", w: "w-28", rot:  1.6, z: 14 },
-  { top: "44vh", left: "8vw",  w: "w-20", rot: -1.2, z: 9  }
-];
-
-function Stack({ items, layout }) {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  return (
-    <div className="section">
-      <div ref={ref} className="stack">
-        {items.map((item, i) => {
-          const L = layout[i % layout.length];
-          const y = useTransform(scrollYProgress, [0, 1], [i * -60, i * 140]);
-          const r = useTransform(scrollYProgress, [0, 0.5, 1], [L.rot - 6, L.rot, L.rot + 6]);
-          const s = useTransform(scrollYProgress, [0, 1], [0.98, 1.02]);
-          return (
-            <motion.a key={i} href={item.link || item.src || "#"} className={`card ${L.w}`}
-              style={{ top: L.top, left: L.left, zIndex: L.z, y, rotate: r, scale: s }} target="_blank" rel="noreferrer">
-              <img src={item.src} alt={item.title || "art"} />
-            </motion.a>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-export default function App() {
-  useLenis();
-  const [data, setData] = useState([]);
-  useEffect(() => {
-    fetchManifest().then(setData).catch(() => {
-      setData([
-        { src: "https://picsum.photos/id/1015/1200/800" },
-        { src: "https://picsum.photos/id/1016/1200/800" },
-        { src: "https://picsum.photos/id/1021/1200/800" },
-        { src: "https://picsum.photos/id/1025/1200/800" },
-        { src: "https://picsum.photos/id/1035/1200/800" },
-        { src: "https://picsum.photos/id/1040/1200/800" },
-        { src: "https://picsum.photos/id/1050/1200/800" },
-        { src: "https://picsum.photos/id/1060/1200/800" }
-      ]);
-    });
-  }, []);
-  const [s1, s2, s3] = useMemo(() => sliceIntoStacks(data), [data]);
-  return (
-    <div className="page">
-      <aside className="sidebar">
-        <div className="brand">ANNA<br/>MILLS</div>
-        <div className="brand-sub">DESIGN</div>
-        <nav className="nav" style={{ marginTop: 18 }}>
-          <a href="#about">About</a><a href="#work"><strong>Work</strong></a><a href="#contact">Contact</a>
-        </nav>
-        <p className="copy">Welcome to my website! Do stick around. Scrolling is encouraged here, it makes things happen.</p>
-        <a className="nav" style={{ fontWeight: 600 }} href="#play">Play!</a>
-      </aside>
-      <main className="stage">
-        <Stack items={s1} layout={layout1} />
-        <Stack items={s2} layout={layout2} />
-        <Stack items={s3} layout={layout3} />
-      </main>
-    </div>
-  );
-}
+Deployment Settings
+2 Recommendations
+Build Logs
+9s
+34 lines
+Find in logs
+⌘F
+Running build in Washington, D.C., USA (East) – iad1
+Build machine configuration: 4 cores, 8 GB
+Cloning github.com/Heneni/three-js-mcp (Branch: main, Commit: 430e24d)
+Cloning completed: 233.000ms
+Restored build cache from previous deployment (AgEnqNRsE5ZF4dVbTgvAGysf1A4w)
+Running "vercel build"
+Vercel CLI 48.8.0
+Installing dependencies...
+added 2 packages, removed 3 packages, and changed 4 packages in 2s
+37 packages are looking for funding
+  run `npm fund` for details
+Running "npm run build"
+> annamills-clone@0.0.2 build
+> vite build
+vite v5.4.10 building for production...
+transforming...
+✓ 331 modules transformed.
+rendering chunks...
