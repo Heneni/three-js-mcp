@@ -55,6 +55,11 @@ const layout3 = [
 ];
 
 function Card({ item, index, layout, scrollYProgress }) {
+  // Guard against empty layout array
+  if (!layout || layout.length === 0) {
+    return null;
+  }
+  
   const L = layout[index % layout.length];
   const y = useTransform(scrollYProgress, [0, 1], [index * -60, index * 140]);
   const r = useTransform(scrollYProgress, [0, 0.5, 1], [L.rot - 6, L.rot, L.rot + 6]);
@@ -78,7 +83,7 @@ function Stack({ items, layout }) {
     <div className="section">
       <div ref={ref} className="stack">
         {safeItems.map((item, i) => (
-          <Card key={i} item={item} index={i} layout={layout} scrollYProgress={scrollYProgress} />
+          <Card key={item.src || item.image || i} item={item} index={i} layout={layout} scrollYProgress={scrollYProgress} />
         ))}
       </div>
     </div>
